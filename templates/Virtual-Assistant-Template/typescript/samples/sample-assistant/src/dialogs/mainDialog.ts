@@ -7,12 +7,19 @@ import {
     BotFrameworkAdapter,
     BotTelemetryClient,
     RecognizerResult,
-    StatePropertyAccessor } from 'botbuilder';
+    StatePropertyAccessor,
+    TurnContext} from 'botbuilder';
 import { LuisRecognizer, LuisRecognizerTelemetryClient, QnAMakerResult, QnAMakerTelemetryClient } from 'botbuilder-ai';
 import {
+    ComponentDialog,
+    ConfirmPrompt,
     DialogContext,
+    DialogSet,
     DialogTurnResult,
-    DialogTurnStatus } from 'botbuilder-dialogs';
+    DialogTurnStatus,
+    OAuthPrompt,
+    WaterfallDialog,
+    WaterfallStepContext} from 'botbuilder-dialogs';
 import {
     ISkillManifest,
     SkillContext,
@@ -21,7 +28,6 @@ import {
 import {
     ICognitiveModelSet,
     InterruptionAction,
-    RouterDialog,
     TokenEvents } from 'botbuilder-solutions';
 import { TokenStatus } from 'botframework-connector';
 import {
@@ -42,7 +48,7 @@ enum Events {
     locationEvent = 'va.location'
 }
 
-export class MainDialog extends RouterDialog {
+export class MainDialog extends ComponentDialog {
     // Fields
     private readonly luisServiceGeneral: string = 'general';
     private readonly luisServiceFaq: string = 'faq';
@@ -65,7 +71,7 @@ export class MainDialog extends RouterDialog {
         onboardingAccessor: StatePropertyAccessor<IOnboardingState>,
         telemetryClient: BotTelemetryClient
     ) {
-        super(MainDialog.name, telemetryClient);
+        super(MainDialog.name); //, telemetryClient);
         this.settings = settings;
         this.services = services;
         this.onboardingAccessor = onboardingAccessor;
@@ -79,6 +85,72 @@ export class MainDialog extends RouterDialog {
         skillDialogs.forEach((skillDialog: SkillDialog): void => {
             this.addDialog(skillDialog);
         });
+
+        this.addDialog(new OAuthPrompt('OAuthPrompt', {
+            connectionName: 'Outlook',
+            text: 'Please Sign In',
+            title: 'Sign In',
+            timeout: 300000
+        }));
+        this.addDialog(new ConfirmPrompt('ConfirmPrompt'));
+        this.addDialog(new WaterfallDialog('MainWaterfallDialog', [
+            this.promptStep.bind(this),
+            this.loginStep.bind(this),
+            this.displayTokenPhase1.bind(this),
+            this.displayTokenPhase2.bind(this)
+        ]));
+
+        this.initialDialogId = 'MainWaterfallDialog';
+    }
+
+    public async promptStep(stepContext: WaterfallStepContext): Promise<DialogTurnResult> {
+        return stepContext.beginDialog('OAuthPrompt');
+    }
+
+    public async loginStep(stepContext: WaterfallStepContext): Promise<DialogTurnResult> {
+        // Get the token from the previous step. Note that we could also have gotten the
+        // token directly from the prompt itself. There is an example of this in the next method.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/tslint/config
+        const tokenResponse: any = stepContext.result;
+        if (tokenResponse) {
+            await stepContext.context.sendActivity('You are now logged in.');
+
+            return stepContext.prompt('ConfirmPrompt', 'Would you like to view your token?');
+        }
+        await stepContext.context.sendActivity('Login was not successful please try again.');
+
+        return stepContext.endDialog();
+    }
+
+    public async displayTokenPhase1(stepContext: WaterfallStepContext): Promise<DialogTurnResult> {
+        await stepContext.context.sendActivity('Thank you.');
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/tslint/config
+        const result: any = stepContext.result;
+        if (result) {
+            // Call the prompt again because we need the token. The reasons for this are:
+            // 1. If the user is already logged in we do not need to store the token locally in the bot and worry
+            // about refreshing it. We can always just call the prompt again to get the token.
+            // 2. We never know how long it will take a user to respond. By the time the
+            // user responds the token may have expired. The user would then be prompted to login again.
+            //
+            // There is no reason to store the token locally in the bot because we can always just call
+            // the OAuth prompt to get the token or get a new token if needed.
+            return stepContext.beginDialog('OAuthPrompt');
+        }
+
+        return stepContext.endDialog();
+    }
+
+    public async displayTokenPhase2(stepContext: WaterfallStepContext): Promise<DialogTurnResult> {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/tslint/config
+        const tokenResponse: any = stepContext.result;
+        if (tokenResponse) {
+            // tslint:disable-next-line:no-unsafe-any
+            await stepContext.context.sendActivity(`Here is your token ${ tokenResponse.token }`);
+        }
+
+        return stepContext.endDialog();
     }
 
     protected async onStart(dc: DialogContext): Promise<void> {
@@ -331,5 +403,58 @@ export class MainDialog extends RouterDialog {
         await dc.context.sendActivity(i18next.t('main.logOut'));
 
         return InterruptionAction.StartedDialog;
+    }
+
+    public async run(context: TurnContext, accessor: StatePropertyAccessor): Promise<void> {
+        const dialogSet: DialogSet = new DialogSet(accessor);
+        dialogSet.add(this);
+
+        const dialogContext: DialogContext = await dialogSet.createContext(context);
+        const results: DialogTurnResult = await dialogContext.continueDialog();
+        if (results.status === DialogTurnStatus.empty) {
+            await dialogContext.beginDialog(this.id);
+        }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/tslint/config
+    public async onBeginDialog(innerDc: DialogContext, options?: any): Promise<DialogTurnResult> {
+        const result: DialogTurnResult = await this.interrupt(innerDc);
+        if (result.result !== undefined) {
+            return result;
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/tslint/config
+        return super.onBeginDialog(innerDc, options);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/tslint/config
+    public async onContinueDialog(innerDc: DialogContext): Promise<DialogTurnResult> {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/tslint/config
+        const result: DialogTurnResult = await this.interrupt(innerDc);
+        if (result.result !== undefined) {
+            return result;
+        }
+
+        return super.onContinueDialog(innerDc);
+    }
+
+    public async interrupt(innerDc: DialogContext): Promise<DialogTurnResult> {
+        if (innerDc.context.activity.type === ActivityTypes.Message) {
+            const text: string = innerDc.context.activity.text.toLowerCase();
+            if (text === 'logout') {
+                // The bot adapter encapsulates the authentication processes.
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/tslint/config
+                const botAdapter: any = innerDc.context.adapter;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/tslint/config
+                await botAdapter.signOutUser(innerDc.context, 'Outlook');
+                await innerDc.context.sendActivity('You have been signed out.');
+
+                return innerDc.cancelAllDialogs();
+            }
+
+            return innerDc.cancelAllDialogs();
+        }
+
+        return innerDc.cancelAllDialogs();
     }
 }
