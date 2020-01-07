@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Bot.Connector.DirectLine;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Microsoft.Bot.Builder.FunctionalTests
+namespace VirtualAssistantSample.Tests
 {
     [TestClass]
     [TestCategory("FunctionalTests")]
