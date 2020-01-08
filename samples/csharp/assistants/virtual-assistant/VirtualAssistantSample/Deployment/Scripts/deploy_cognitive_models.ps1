@@ -167,16 +167,15 @@ foreach ($language in $languageArr)
 	    # Initialize Dispatch
         Write-Host "> Initializing $($langCode) dispatch model ..." -NoNewline
 		$dispatchName = "$($name)$($langCode)_Dispatch"
-		Write-Host "Dispatch $dispatchName"
-		Write-Host "Lang code $langCode"
-		$dataFolder = Join-Path $PSScriptRoot .. Resources Dispatch $langCode
+		$dataFolder = $(Join-Path $PSScriptRoot .. Resources Dispatch $langCode)
+
+		Write-Host "Dispatch name $dispatchName"
 		Write-Host "Data folder $dataFolder"
-		(dispatch init `
-			--name $dispatchName `
-			--luisAuthoringKey $luisAuthoringKey `
-			--luisAuthoringRegion $luisAuthoringRegion `
-            --gov $gov `
-			--dataFolder $dataFolder) 2>> $logFile | Out-Null
+		Write-Host "log filer $logfile"
+		Write-Host "authoring key $luisAuthoringKey"
+		Write-Host "authoring region $luisAuthoringRegion"
+		Write-Host "gov $gov"
+		(dispatch init --name $dispatchName --luisAuthoringKey $luisAuthoringKey --luisAuthoringRegion $luisAuthoringRegion --gov $gov --dataFolder $dataFolder) 2>> $logFile | Out-Null
         Write-Host "Done." -ForegroundColor Green
 	}
 
