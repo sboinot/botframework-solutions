@@ -173,7 +173,7 @@ foreach ($language in $languageArr)
 			--luisAuthoringKey $luisAuthoringKey `
 			--luisAuthoringRegion $luisAuthoringRegion `
             --gov $gov `
-			--dataFolder $dataFolder) 2>> $logFile | Out-Null
+			--dataFolder $dataFolder)
         Write-Host "Done." -ForegroundColor Green
 	}
 
