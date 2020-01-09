@@ -11,21 +11,29 @@ namespace LinkedAccounts.Web.Helpers
 
         public static string GetUserId(HttpContext httpContext, ClaimsPrincipal user)
         {
-            var claimsIdentity = user?.Identity as System.Security.Claims.ClaimsIdentity;
-
-            if (claimsIdentity == null)
+            // If the user has overriden (to work around emulator blocker) then we use a provided UserId inside of the logged in user.
+            if (!string.IsNullOrEmpty(httpContext.Session.GetString("ChangedUserId")))
             {
-                throw new InvalidOperationException("User is not logged in and needs to be.");
+                return httpContext.Session.GetString("ChangedUserId");
             }
-
-            var objectId = claimsIdentity.Claims?.SingleOrDefault(c => c.Type == AadObjectidentifierClaim)?.Value;
-
-            if (objectId == null)
+            else
             {
-                throw new InvalidOperationException("User does not have a valid AAD ObjectId claim.");
-            }
+                var claimsIdentity = user?.Identity as System.Security.Claims.ClaimsIdentity;
 
-            return objectId;
+                if (claimsIdentity == null)
+                {
+                    throw new InvalidOperationException("User is not logged in and needs to be.");
+                }
+
+                var objectId = claimsIdentity.Claims?.SingleOrDefault(c => c.Type == AadObjectidentifierClaim)?.Value;
+
+                if (objectId == null)
+                {
+                    throw new InvalidOperationException("User does not have a valid AAD ObjectId claim.");
+                }
+
+                return objectId;
+            }
         }
     }
 }
