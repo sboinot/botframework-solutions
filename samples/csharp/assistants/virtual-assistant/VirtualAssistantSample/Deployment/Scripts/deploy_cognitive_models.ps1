@@ -175,7 +175,7 @@ foreach ($language in $languageArr)
 		Write-Host "authoring key $luisAuthoringKey"
 		Write-Host "authoring region $luisAuthoringRegion"
 		Write-Host "gov $gov"
-		dispatch init --name $dispatchName --luisAuthoringKey $luisAuthoringKey --luisAuthoringRegion $luisAuthoringRegion --gov $gov --dataFolder $dataFolder
+		dispatch init --name $dispatchName --luisAuthoringKey $luisAuthoringKey --luisAuthoringRegion $luisAuthoringRegion --gov $gov --dataFolder $dataFolder 2>&1
         Write-Host "Done." -ForegroundColor Green
 	}
 
@@ -232,7 +232,7 @@ foreach ($language in $languageArr)
 						--region $luisAuthoringRegion `
 						--intentName "l_$($lu.BaseName)" `
 						--dataFolder $dataFolder `
-						--dispatch "$(Join-Path $dataFolder "$($dispatchName).dispatch")"
+						--dispatch "$(Join-Path $dataFolder "$($dispatchName).dispatch")" 2>&1
                      Write-Host "Done." -ForegroundColor Green
 				}
 
@@ -283,7 +283,7 @@ foreach ($language in $languageArr)
 							--key $qnaSubscriptionKey `
 							--intentName "q_$($lu.BaseName)" `
 							--dataFolder $dataFolder `
-							--dispatch "$(Join-Path $dataFolder "$($dispatchName).dispatch")"
+							--dispatch "$(Join-Path $dataFolder "$($dispatchName).dispatch")" 2>&1
                         Write-Host "Done." -ForegroundColor Green
 					}
 
