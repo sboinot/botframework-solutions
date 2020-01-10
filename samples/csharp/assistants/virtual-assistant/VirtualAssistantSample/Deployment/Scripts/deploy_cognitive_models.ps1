@@ -175,7 +175,7 @@ foreach ($language in $languageArr)
 		Write-Host "authoring key $luisAuthoringKey"
 		Write-Host "authoring region $luisAuthoringRegion"
 		Write-Host "gov $gov"
-		(dispatch init --name $dispatchName --luisAuthoringKey $luisAuthoringKey --luisAuthoringRegion $luisAuthoringRegion --gov $gov --dataFolder $dataFolder) 2>> $logFile
+		dispatch init --name $dispatchName --luisAuthoringKey $luisAuthoringKey --luisAuthoringRegion $luisAuthoringRegion --gov $gov --dataFolder $dataFolder
         Write-Host "Done." -ForegroundColor Green
 	}
 
@@ -225,14 +225,14 @@ foreach ($language in $languageArr)
 				if ($useDispatch) {
 					# Add luis app to dispatch
 					Write-Host "> Adding $($langCode) $($lu.BaseName) app to dispatch model ..." -NoNewline
-					(dispatch add `
+					dispatch add `
 						--type "luis" `
 						--name $luisApp.name `
 						--id $luisApp.id  `
 						--region $luisAuthoringRegion `
 						--intentName "l_$($lu.BaseName)" `
 						--dataFolder $dataFolder `
-						--dispatch "$(Join-Path $dataFolder "$($dispatchName).dispatch")") 2>> $logFile | Out-Null
+						--dispatch "$(Join-Path $dataFolder "$($dispatchName).dispatch")"
                      Write-Host "Done." -ForegroundColor Green
 				}
 
@@ -276,14 +276,14 @@ foreach ($language in $languageArr)
 				if ($qnaKb) {
 					if ($useDispatch) {
 						Write-Host "> Adding $($langCode) $($lu.BaseName) kb to dispatch model ..." -NoNewline    
-						(dispatch add `
+						dispatch add `
 							--type "qna" `
 							--name $lu.BaseName `
 							--id $qnaKb.kbId  `
 							--key $qnaSubscriptionKey `
 							--intentName "q_$($lu.BaseName)" `
 							--dataFolder $dataFolder `
-							--dispatch "$(Join-Path $dataFolder "$($dispatchName).dispatch")") 2>> $logFile | Out-Null
+							--dispatch "$(Join-Path $dataFolder "$($dispatchName).dispatch")"
                         Write-Host "Done." -ForegroundColor Green
 					}
 
