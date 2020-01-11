@@ -14,7 +14,7 @@ Param(
 	[switch] $useDispatch = $true,
     [string] $languages = "en-us",
     [string] $outFolder = $(Get-Location),
-	[string] $logFile = $(Join-Path $PSScriptRoot .. "deploy_cognitive_models_log.txt")
+	[string] $logFile = $(Join-Path Get-Location "Deployment" "deploy_cognitive_models_log.txt")
 )
 
 . $PSScriptRoot\luis_functions.ps1
