@@ -83,15 +83,15 @@ if (-not $luisAuthoringKey) {
 
         if ($confirmCreateKey -ne 'y') {
             $luisAuthoringKey = Read-Host "? LUIS Authoring Key"
-            $createLuisAuthoring = "false"
+            $createLuisAuthoring = $false
         }
         else {
-            $createLuisAuthoring = "true"
+            $createLuisAuthoring = $true
         }
     } 
 }
 else {
-    $createLuisAuthoring = "false"
+    $createLuisAuthoring = $false
 }
 
 if (-not $luisAuthoringRegion) {
