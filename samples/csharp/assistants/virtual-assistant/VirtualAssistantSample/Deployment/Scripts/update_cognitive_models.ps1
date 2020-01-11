@@ -10,8 +10,8 @@ Param(
 	[string] $qnaEndpoint = "https://westus.api.cognitive.microsoft.com/qnamaker/v4.0",
     [string] $qnaFolder = $(Join-Path $PSScriptRoot '..' 'Resources' 'QnA'),
     [string] $lgOutFolder = $(Join-Path (Get-Location) 'Services'),
-	[string] $logFolder = $(Join-Path $PSScriptRoot ..)
-    [string] $logName = "update_cognitive_models_log.txt"
+	[string] $logFolder = $(Join-Path $PSScriptRoot '..'),
+    [string] $logName = 'update_cognitive_models_log.txt'
 )
 
 . $PSScriptRoot\luis_functions.ps1

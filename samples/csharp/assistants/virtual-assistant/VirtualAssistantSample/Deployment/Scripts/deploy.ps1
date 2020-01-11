@@ -15,8 +15,8 @@ Param(
 	[string] $languages = "en-us",
     [string] $qnaEndpoint = "https://westus.api.cognitive.microsoft.com/qnamaker/v4.0",
 	[string] $projDir = $(Get-Location),
-	[string] $logFolder = $(Join-Path $PSScriptRoot ..)
-    [string] $logName = "deploy_log.txt"
+	[string] $logFolder = $(Join-Path $PSScriptRoot '..'),
+    [string] $logName = 'deploy_log.txt'
 )
 
 # Reset log file
