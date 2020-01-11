@@ -4,10 +4,12 @@ Param(
 	[string] $name,
 	[string] $resourceGroup,
     [string] $projFolder = $(Get-Location),
-	[string] $logFile = $(Join-Path $PSScriptRoot .. "publish_log.txt")
+	[string] $logFolder = $(Join-Path $PSScriptRoot ..)
+    [string] $logName = "publish_log.txt"
 )
 
 # Reset log file
+$logFile = $(Join-Path $logFolder $logName)
 if (Test-Path $logFile) {
 	Clear-Content $logFile -Force | Out-Null
 }

@@ -14,13 +14,15 @@ Param(
 	[switch] $useDispatch = $true,
     [string] $languages = "en-us",
     [string] $outFolder = $(Get-Location),
-	[string] $logFile = $(Join-Path Get-Location "Deployment" "deploy_cognitive_models_log.txt")
+	[string] $logFolder = $(Join-Path $PSScriptRoot ..)
+    [string] $logName = "deploy_cognitive_models_log.txt"
 )
 
 . $PSScriptRoot\luis_functions.ps1
 . $PSScriptRoot\qna_functions.ps1
 
 # Reset log file
+$logFile = $(Join-Path $logFolder $logName)
 if (Test-Path $logFile) {
 	Clear-Content $logFile -Force | Out-Null
 }

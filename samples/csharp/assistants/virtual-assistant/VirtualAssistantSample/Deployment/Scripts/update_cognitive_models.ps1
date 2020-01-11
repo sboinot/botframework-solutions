@@ -10,18 +10,20 @@ Param(
 	[string] $qnaEndpoint = "https://westus.api.cognitive.microsoft.com/qnamaker/v4.0",
     [string] $qnaFolder = $(Join-Path $PSScriptRoot '..' 'Resources' 'QnA'),
     [string] $lgOutFolder = $(Join-Path (Get-Location) 'Services'),
-    [string] $logFile = $(Join-Path $PSScriptRoot .. "update_cognitive_models_log.txt")
+	[string] $logFolder = $(Join-Path $PSScriptRoot ..)
+    [string] $logName = "update_cognitive_models_log.txt"
 )
 
 . $PSScriptRoot\luis_functions.ps1
 . $PSScriptRoot\qna_functions.ps1
 
 # Reset log file
+$logFile = $(Join-Path $logFolder $logName)
 if (Test-Path $logFile) {
-    Clear-Content $logFile -Force | Out-Null
+	Clear-Content $logFile -Force | Out-Null
 }
 else {
-    New-Item -Path $logFile | Out-Null
+	New-Item -Path $logFile | Out-Null
 }
 
 # Check for AZ CLI and confirm version
