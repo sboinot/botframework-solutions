@@ -136,7 +136,7 @@ Write-Host "Done." -ForegroundColor Green
 if ($parametersFile) {
 	Write-Host "> Validating Azure deployment ..." -NoNewline
 	$validation = az group deployment validate `
-		--resource-group $resourcegroup `
+		--resource-group $resourceGroup `
 		--template-file "$(Join-Path $PSScriptRoot '..' 'Resources' 'template.json')" `
 		--parameters "@$($parametersFile)" `
 		--parameters name=$name microsoftAppId=$appId microsoftAppPassword="`"$($appPassword)`"" luisAuthoringLocation=$armLuisAuthoringRegion useLuisAuthoring="$($createLuisAuthoring)" `
@@ -171,7 +171,7 @@ if ($parametersFile) {
 else {
 	Write-Host "> Validating Azure deployment ..." -NoNewline
 	$validation = az group deployment validate `
-		--resource-group $resourcegroup `
+		--resource-group $resourceGroup `
 		--template-file "$(Join-Path $PSScriptRoot '..' 'Resources' 'template.json')" `
 		--parameters name=$name microsoftAppId=$appId microsoftAppPassword="`"$($appPassword)`"" luisAuthoringLocation=$armLuisAuthoringRegion useLuisAuthoring="$($createLuisAuthoring)" `
         --output json
