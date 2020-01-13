@@ -2,7 +2,7 @@
 layout: tutorial
 category: Virtual Assistant
 subcategory: Create
-language: csharp
+language: C#
 title: Run your assistant
 order: 5
 ---

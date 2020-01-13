@@ -2,7 +2,7 @@
 layout: tutorial
 category: Skills
 subcategory: Customize
-language: typescript
+language: TypeScript
 title: Update your skill manifest
 order: 3
 ---

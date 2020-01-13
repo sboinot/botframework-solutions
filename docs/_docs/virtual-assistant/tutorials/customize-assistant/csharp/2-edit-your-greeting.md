@@ -2,7 +2,7 @@
 layout: tutorial
 category: Virtual Assistant
 subcategory: Customize
-language: csharp
+language: C#
 title: Edit your greeting
 order: 2
 ---

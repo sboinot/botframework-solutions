@@ -3,7 +3,7 @@ layout: tutorial
 category: Skills
 subcategory: Extend a v4 Bot
 title: Add Bot Framework Solutions packages
-language: csharp
+language: C#
 order: 2
 ---
 

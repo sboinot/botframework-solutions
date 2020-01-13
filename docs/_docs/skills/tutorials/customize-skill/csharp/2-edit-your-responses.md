@@ -2,7 +2,7 @@
 layout: tutorial
 category: Skills
 subcategory: Customize
-language: csharp
+language: C#
 title: Edit responses
 order: 2
 ---

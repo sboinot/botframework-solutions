@@ -3,7 +3,7 @@ layout: tutorial
 category: Skills
 subcategory: Extend a v4 Bot
 title: Forward queries to Skills
-language: csharp
+language: C#
 order: 5
 ---
 

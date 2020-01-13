@@ -2,7 +2,7 @@
 layout: tutorial
 category: Skills
 subcategory: Create
-language: typescript
+language: TypeScript
 title: Invoke your skill
 order: 7
 ---

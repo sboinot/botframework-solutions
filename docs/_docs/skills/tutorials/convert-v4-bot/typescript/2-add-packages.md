@@ -2,7 +2,7 @@
 layout: tutorial
 category: Skills
 subcategory: Convert a v4 Bot
-language: typescript
+language: TypeScript
 title: Add Bot Framework Solutions packages
 order: 2
 ---

@@ -2,7 +2,7 @@
 layout: tutorial
 category: Skills
 subcategory: Create
-language: typescript
+language: TypeScript
 title: Add your skill to a Virtual Assistant
 order: 6
 ---

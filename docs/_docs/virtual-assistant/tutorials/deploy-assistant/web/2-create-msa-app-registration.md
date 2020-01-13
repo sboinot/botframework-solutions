@@ -2,7 +2,7 @@
 layout: tutorial
 category: Virtual Assistant
 subcategory: Deploy
-language:  web
+language: Using the web
 title: Create Microsoft App registration
 order: 2
 ---

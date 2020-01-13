@@ -3,7 +3,7 @@ layout: tutorial
 category: Skills
 subcategory: Extend a v4 Bot
 title: Skill configuration
-language: csharp
+language: C#
 order: 3
 ---
 

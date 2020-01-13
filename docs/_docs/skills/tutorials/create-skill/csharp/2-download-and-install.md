@@ -2,7 +2,7 @@
 layout: tutorial
 category: Skills
 subcategory: Create
-language: csharp
+language: C#
 title: Download and install
 order: 2
 ---

@@ -2,7 +2,7 @@
 layout: tutorial
 category: Virtual Assistant
 subcategory: Customize
-language: typescript
+language: TypeScript
 title: Next steps
 order: 5
 ---

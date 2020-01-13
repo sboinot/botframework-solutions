@@ -2,7 +2,7 @@
 layout: tutorial
 category: Skills
 subcategory: Convert a v4 Bot
-language: csharp
+language: C#
 title: Add Bot Framework Solutions packages
 order: 2
 ---

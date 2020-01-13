@@ -2,7 +2,7 @@
 layout: tutorial
 category: Skills
 subcategory: Create
-language: csharp
+language: C#
 title: Add your skill to a Virtual Assistant
 order: 6
 ---

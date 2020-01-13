@@ -2,7 +2,7 @@
 layout: tutorial
 category: Skills
 subcategory: Create
-language: typescript
+language: TypeScript
 title: Download and install
 order: 2
 ---

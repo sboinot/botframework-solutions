@@ -2,7 +2,7 @@
 layout: tutorial
 category: Virtual Assistant
 subcategory: Deploy
-language: cli
+language: Using CLI tools
 title: Deploy LUIS models
 order: 5
 ---

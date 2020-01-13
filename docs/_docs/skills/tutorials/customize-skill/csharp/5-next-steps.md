@@ -2,7 +2,7 @@
 layout: tutorial
 category: Skills
 subcategory: Customize
-language: csharp
+language: C#
 title: Next steps
 order: 5
 ---
