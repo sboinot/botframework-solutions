@@ -15,13 +15,15 @@ order: 1
 
 In the Bot Framework 4.7 release, the Bot Framework Skills capability was transitioned into a core part of the core SDK and reached the General Availability (GA) milestone. Existing Virtual Assistant and Skill Template projects built using Bot Builder packages 4.6.2 and below need to be migrated in order to use this new approach. With the 4.7 skill protocol, any bot can become a skill without adapter changes hence the simplification that was achieved.
 
+> At this time, this guidance is for customers seeking to leverage existing Bot Framework Skills for Power Virtual Agent based scenarios. Virtual Assistant scenarios can leverage this update to Skills in the next release.
+
 ### Prerequisites
 
-An existing Bot Framework Skill built from using  Skill Template v4.6.0.1 and below.
+An existing Bot Framework Skill built from using Skill Template v4.6.0.1 and below.
 
 ### Steps
 
-1. Update the Bot Framework SDK version to 4.7.0 for the Skill project
+1. Update the Bot Framework SDK version to `4.7.0` for the Skill project
 
     In the latest Skill Template, the version of the BotBuilder libraries will be 4.6.1 or below. These need to be updated to 4.7.0. 
 
@@ -37,16 +39,15 @@ An existing Bot Framework Skill built from using  Skill Template v4.6.0.1 and be
         <PackageReference Include="Microsoft.Bot.Configuration" Version="4.6.1 -> 4.7.0" />
         <PackageReference Include="Microsoft.Bot.Connector" Version="4.6.1 -> 4.7.0" />
         <PackageReference Include="Microsoft.Bot.Schema" Version="4.6.1 -> 4.7.0" />
-
     ```
 
-    > Please note that Microsoft.Bot.Builder.Solutions library version 4.6.2 is compatible with BotBuilder 4.7.0. A new package will be published moving forwards.
+    > Please note that `Microsoft.Bot.Builder.Solutions` library version 4.6.2 is compatible with BotBuilder 4.7.0. A new package will be published moving forwards.
 
 2. Update BotController.cs
 
-    Within your Skill project, `Controller\BotController.cs` implements SkillController which includes capabilities of standing up new APIs for skill invocation. This requirement has now been removed, therefore a default controller should be used.
+    Within your Skill project, `Controller\BotController.cs` implements `SkillController` which includes capabilities of standing up new APIs for skill invocation. This requirement has now been removed, therefore a default controller can now be used.
 
-    Change the BotController.cs as shown below.
+    Change the `BotController.cs` as shown below.
 
     ```csharp
 
@@ -139,7 +140,7 @@ An existing Bot Framework Skill built from using  Skill Template v4.6.0.1 and be
 
     ```
 
-9. Add code in the exception handle of the adapter to send an EndOfConversation activity back
+9. Add code in the exception handler of the adapter to send an EndOfConversation activity back
 
     In the exception handler of the `DefaultAdapter` normally located in the `Adapters` folder, add code to send an `EndOfConversation` activity back to complete a conversation when exception happens:
 
@@ -155,4 +156,4 @@ An existing Bot Framework Skill built from using  Skill Template v4.6.0.1 and be
 
     ```
 
-Please Note that this document doesn't contain the step to update the skill manifest to the latest schema. The work is still in progress and this document will be updated once that's finished.
+> A change to the Skill Manifest schema is expected shortly, this document will be updated to reflect additional steps when complete.
