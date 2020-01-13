@@ -19,7 +19,8 @@ In the Bot Framework 4.7 release, the Bot Framework Skills capability was transi
 
 ### Prerequisites
 
-An existing Bot Framework Skill built from using Skill Template v4.6.0.1 and below.
+- An existing Bot Framework Skill built from using Skill Template v4.6.0.1 and below.
+- Review the `Dialogs\MainDialog.cs` file. If `MainDialog` derives from `RouterDialog` rather than `ActivityHandlerDialog` follow [these instructions](https://aka.ms/bfvarouting) to reflect dialog routing changes made in the last release.
 
 ### Steps
 
@@ -89,11 +90,9 @@ An existing Bot Framework Skill built from using Skill Template v4.6.0.1 and bel
     Remove these lines:
 
     ```csharp
-
         services.AddTransient<SkillWebSocketBotAdapter, CustomSkillAdapter>();	
         services.AddTransient<SkillWebSocketAdapter>();	
         services.AddSingleton<IWhitelistAuthenticationProvider, WhitelistAuthenticationProvider>();
-
     ```
 
 4. Remove CustomSkillAdapter.cs
@@ -104,13 +103,7 @@ An existing Bot Framework Skill built from using Skill Template v4.6.0.1 and bel
 
     If you have implemented your own class for the interface `IWhitelistAuthenticationProvider` instead of using the WhitelistAuthenticationProvider class from the Solutions lib this can be removed.
 
-6. Keep using the MultiProviderAuthDialog (Non-Action)
-
-    In the previous model the parent bot (VA) is the responsible for performing OAuth tasks by acting on behalf of a skill thus ensuring a common, shared authentication experience across an assistant. With this new release, Skills can now perform their own authentication requests and still benefit from a shared trust boundary.
-
-    The existing `MultiProviderAuthDialog` if used will automatically adapt to this change and no changes are required. As required you can switch to using the `OAuthPrompt` directly.
-
-7. Add code to handle the `EndOfConversation` activity from parent bot
+6. Add code to handle the `EndOfConversation` activity from parent bot
 
     In Skill invocation, a skill needs to handle an `EndOfConversation` activity in order to support cancellation for interruption scenarios at the parent bot level. This capability will be included in the next release of the `Microsoft.Bot.Builder.Solutions` package and eventually as part of the core Bot Builder SDK. For now, add these lines of code within the `OnTurnAsync` handler in your `IBot` implementation class (within the Bots folder of your project) to handle the `EndOfConversation` activity:
 
@@ -129,7 +122,7 @@ An existing Bot Framework Skill built from using Skill Template v4.6.0.1 and bel
     
     With this block of code, when your skill receives an EndOfConversation activity it will clear out the existing dialog state so the skill will be in a clean state ready for the next conversation.
 
-8. Update to use `EndOfConversation` instead of Handoff when a conversation completed
+7. Update to use `EndOfConversation` instead of Handoff when a conversation completed
 
     In the `OnDialogCompleteAsync` function of `MainDialog.cs`, instead of sending back a 'Handoff' activity, update it to be `EndOfConversation` inline with the new Skills changes.
     
@@ -140,7 +133,7 @@ An existing Bot Framework Skill built from using Skill Template v4.6.0.1 and bel
 
     ```
 
-9. Add code in the exception handler of the adapter to send an EndOfConversation activity back
+8. Add code in the exception handler of the adapter to send an EndOfConversation activity back
 
     In the exception handler of the `DefaultAdapter` normally located in the `Adapters` folder, add code to send an `EndOfConversation` activity back to complete a conversation when exception happens:
 
@@ -155,5 +148,11 @@ An existing Bot Framework Skill built from using Skill Template v4.6.0.1 and bel
     };
 
     ```
+
+9. Keep using the MultiProviderAuthDialog (No action needed)
+
+    In the previous model the parent bot (VA) is the responsible for performing OAuth tasks by acting on behalf of a skill thus ensuring a common, shared authentication experience across an assistant. With this new release, Skills can now perform their own authentication requests and still benefit from a shared trust boundary.
+
+    The existing `MultiProviderAuthDialog` if used will automatically adapt to this change and no changes are required. As required you can switch to using the `OAuthPrompt` directly.
 
 > A change to the Skill Manifest schema is expected shortly, this document will be updated to reflect additional steps when complete.
