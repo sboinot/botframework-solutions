@@ -127,25 +127,14 @@ foreach ($langCode in $languageMap.Keys) {
     if ($RemoteToLocal) {
         # Update local LU files based on hosted models
         foreach ($luisApp in $models.languageModels) {
-            $culture = (luis get application `
-                    --appId $luisApp.appId `
-                    --authoringKey $luisApp.authoringKey `
-                    --subscriptionKey $luisApp.subscriptionKey `
-                    --cloud $cloud `
-                    --region $luisApp.authoringRegion | ConvertFrom-Json).culture
+            $culture = (bf luis:application:show --appId $luisApp.appId --endpoint $luisApp.endpoint --subscriptionKey $luisApp.authoringkey | ConvertFrom-Json).culture
+
+            $outJson = $(Join-Path $luisFolder $langCode "$($luisApp.id).json")
+            $outLU = $(Join-Path $luisFolder $langCode "$($luisApp.id).lu")
 
             Write-Host "> Updating local $($langCode) $($luisApp.id).lu file ..." -NoNewline
-            luis export version `
-                --appId $luisApp.appId `
-                --versionId $luisApp.version `
-                --region $luisApp.authoringRegion `
-                --cloud $cloud `
-                --authoringKey $luisApp.authoringKey > $(Join-Path $luisFolder $langCode "$($luisApp.id).json")
-
-            bf luis:convert `
-                --in $(Join-Path $luisFolder $langCode "$($luisApp.id).json") `
-                --out $(Join-Path $luisFolder $langCode "$($luisApp.id).lu") `
-                --force 2>> $logFile | Out-Null
+            bf luis:version:export --versionId $luisApp.version --out $outJson --appId $luisApp.appId --endpoint $luisApp.endpoint --subscriptionKey $luisApp.authoringkey
+            bf luis:convert --in $outJson --out $outLU --force
             Write-Host "Done." -ForegroundColor Green
 
             # Parse LU file
@@ -166,7 +155,7 @@ foreach ($langCode in $languageMap.Keys) {
                 Write-Host "> Running LuisGen for $($luisApp.id) app ..." -NoNewline
                 $luPath = $(Join-Path $luisFolder $langCode "$($luisApp.id).lu")
                 RunLuisGen `
-                    -lu_file $(Get-Item $luPath) `
+                    -luFile $(Get-Item $luPath) `
                     -outName "$($luisApp.id)" `
                     -outFolder $lgOutFolder `
                     -log $logFile
@@ -178,13 +167,13 @@ foreach ($langCode in $languageMap.Keys) {
             if ($dispatch) {
                 Write-Host "> Adding $($langCode) $($luisApp.id) app to dispatch model ... " -NoNewline
                 (dispatch add `
-                        --type "luis" `
-                        --name $luisApp.name `
-                        --id $luisApp.appid  `
-                        --region $luisApp.authoringRegion `
-                        --intentName "l_$($luisApp.id)" `
-                        --dispatch $(Join-Path $dispatchFolder $langCode "$($dispatch.name).dispatch") `
-                        --dataFolder $(Join-Path $dispatchFolder $langCode))  2>> $logFile | Out-Null
+                    --type "luis" `
+                    --name $luisApp.name `
+                    --id $luisApp.appid  `
+                    --region $luisApp.authoringRegion `
+                    --intentName "l_$($luisApp.id)" `
+                    --dispatch $(Join-Path $dispatchFolder $langCode "$($dispatch.name).dispatch") `
+                    --dataFolder $(Join-Path $dispatchFolder $langCode))  2>> $logFile | Out-Null
                 Write-Host "Done." -ForegroundColor Green
             }          
         }
@@ -225,21 +214,20 @@ foreach ($langCode in $languageMap.Keys) {
         foreach ($luisApp in $models.languageModels) {
             $lu = Get-Item -Path $(Join-Path $luisFolder $langCode "$($luisApp.id).lu")
             UpdateLUIS `
-                -lu_file $lu `
+                -luFile $lu `
                 -appId $luisApp.appid `
-                -version $luisApp.version `
-                -language $langCode `
                 -region $luisApp.authoringRegion `
-                -authoringKey $luisApp.authoringKey `
+                -endpoint $luisApp.endpoint `
                 -subscriptionKey $luisApp.subscriptionKey `
-                -gov $useGov `
+                -version $luisApp.version `
+                -culture $culture `
                 -log $logFile
 
              if ($useLuisGen) {
                 Write-Host "> Running LuisGen for $($luisApp.id) app ..." -NoNewline
                 $luPath = $(Join-Path $luisFolder $langCode "$($luisApp.id).lu")
                 RunLuisGen `
-                    -lu_file $(Get-Item $luPath) `
+                    -luFile $(Get-Item $luPath) `
                     -outName "$($luisApp.id)" `
                     -outFolder $lgOutFolder `
                     -log $logFile
@@ -251,7 +239,7 @@ foreach ($langCode in $languageMap.Keys) {
         foreach ($kb in $models.knowledgebases) {
             $lu = Get-Item -Path $(Join-Path $qnaFolder $langCode "$($kb.id).qna")
             UpdateKB `
-                -lu_file $lu `
+                -luFile $lu `
                 -kbId $kb.kbId `
                 -qnaSubscriptionKey $kb.subscriptionKey `
                 -qnaEndpoint $qnaEndpoint `

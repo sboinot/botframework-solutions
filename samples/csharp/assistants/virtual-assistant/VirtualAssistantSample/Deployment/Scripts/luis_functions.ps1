@@ -1,217 +1,101 @@
-function DeployLUIS ($name, $lu_file, $region, $authoringKey, $language, $gov, $log)
+function DeployLUIS ($name, $luFile, $region, $endpoint, $subscriptionKey, $culture, $log)
 {
-    $id = $lu_file.BaseName
-    $outFile = Join-Path $lu_file.DirectoryName "$($id).json"
-    $appName = "$($name)$($langCode)_$($id)"
+    $id = $luFile.BaseName
+    $outFile = Join-Path $luFile.DirectoryName "$($id).json"
+    $appName = "$($name)$($culture)_$($id)"
     
-    if ($gov)
-    {
-        $cloud = 'us'
-    }
-    else 
-    {
-        $cloud = 'com'
-    }
-    
-    Write-Host "> Parsing $($language) $($id) LU file ..." -NoNewline
-	bf luis:convert `
-        --name $appName `
-        --in $lu_file `
-        --culture $language `
-        --out $outFile `
-        --force 2>> $log | Out-Null
+    Write-Host "> Running 'bf luis:convert' ..." -NoNewline
+    bf luis:convert --name $appName --in $luFile --out $outFile --culture $culture --force
     Write-Host "Done." -ForegroundColor Green
-		
-    Write-Host "> Deploying $($language) $($id) LUIS app ..." -NoNewline
-    $luisApp = (luis import application `
-        --appName $appName `
-        --authoringKey $authoringKey `
-        --subscriptionKey $authoringKey `
-        --region $region `
-        --in $outFile `
-        --cloud $cloud `
-        --wait) 2>> $log | ConvertFrom-Json
 
-	if (-not $luisApp)
+    Write-Host "> Running 'bf luis:application:import --name $($appName) --in $($outFile)' ..." -NoNewline
+    $result = bf luis:application:import --name $appName --in $outFile --endpoint $endpoint --subscriptionKey $subscriptionKey
+    
+    $pattern = "(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}"
+    $result -match $pattern
+
+	if (-not $matches)
     {
-		Write-Host "! Could not deploy LUIS model. Review the log for more information." -ForegroundColor DarkRed
+		Write-Host "! Could not import LUIS application. Review the log for more information." -ForegroundColor DarkRed
 		Write-Host "! Log: $($log)" -ForegroundColor DarkRed
 		Return $null
 	}
 	else
     {
+        $appId = $matches[0]
         Write-Host "Done." -ForegroundColor Green
-        Write-Host "> Training and publishing LUIS app ..." -NoNewline
-		$(luis train version `
-            --appId $luisApp.id `
-            --region $region `
-            --authoringKey $authoringKey `
-            --versionId $luisApp.activeVersion `
-            --cloud $cloud `
+        Write-Host "> Running 'bf luis:application:publish' ..." -NoNewline
+        $(luis train version `
+            --appId $appId `
+            --region westus `
+            --authoringKey $subscriptionKey `
+            --versionId 0.1 `
             --wait
-        & luis publish version `
-            --appId $luisApp.id `
-            --region $region `
-            --authoringKey $authoringKey `
-            --versionId $luisApp.activeVersion `
-            --cloud $cloud `
-            --wait) 2>> $log | Out-Null
+        & bf luis:application:publish `
+            --appId $appId `
+            --endpoint $endpoint `
+            --subscriptionKey $subscriptionKey `
+            --versionId 0.1) 2>> $log | Out-Null
         Write-Host "Done." -ForegroundColor Green
 
-		Return $luisApp
+        Write-Host "> returning $($appId)"
+		Return $appId
 	}
 }
 
-function UpdateLUIS ($lu_file, $appId, $version, $language, $region, $authoringKey, $subscriptionKey, $gov, $log)
+function UpdateLUIS ($luFile, $appId, $region, $endpoint, $subscriptionKey, $version, $culture, $log)
 {
-    $id = $lu_file.BaseName
-    $outFile = Join-Path $lu_file.DirectoryName "$($id).json"
-    
-    if ($gov)
-    {
-        $cloud = 'us'
-    }
-    else 
-    {
-        $cloud = 'com'
-    }
-
-    Write-Host "> Getting hosted $($language) $($id) LUIS model settings..." -NoNewline
-    $luisApp = (luis get application `
-        --appId $appId `
-        --region $region `
-        --authoringKey $authoringKey `
-        --cloud $cloud) 2>> $log | ConvertFrom-Json
+    $id = $luFile.BaseName
+    $outFile = Join-Path $luFile.DirectoryName "$($id).json"
+  
+    Write-Host "> Running 'bf luis:application:show' ..." -NoNewline
+    $luisApp = bf luis:application:show --appId $appId --endpoint $endpoint --subscriptionKey $subscriptionKey | ConvertFrom-Json
     Write-Host "Done." -ForegroundColor Green
 
-    Write-Host "> Parsing $($language) $($id) LU file ..." -NoNewline
-	($output = bf luis:convert `
-        --name $luisApp.name `
-        --in $lu_file `
-        --culture $luisApp.culture `
-        --out $outFile `
-        --force 2>&1) >> $log
+    Write-Host "> Running 'bf luis:convert' ..." -NoNewline
+	bf luis:convert --name $luisApp.name --in $luFile --culture $luisApp.culture --out $outFile --force
+    Write-Host "Done." -ForegroundColor Green
 
-    if (-not (Test-Path $outFile)) {
-        Write-Host "Error." -ForegroundColor Red
-        Write-Host "! File not created. Review the log for more information." -ForegroundColor Red
-		Write-Host "! Log: $($log)" -ForegroundColor Red
-        Break
-    }
-
-    if ($output -match 'error') {
-        Write-Host "Error." -ForegroundColor Red
-        Write-Host "! Could not parse the LU file. Review the log for more information." -ForegroundColor Red
-		Write-Host "! Log: $($log)" -ForegroundColor Red
-        Break
-    }
-    else {
-        Write-Host "Done." -ForegroundColor Green
-    }
-     
-    Write-Host "> Getting current versions ..." -NoNewline
-	$versions = (luis list versions `
-        --appId $appId `
-        --region $region `
-        --authoringKey $authoringKey `
-        --cloud $cloud) 2>> $log | ConvertFrom-Json
+    Write-Host "> Running 'bf luis:version:list' ..." -NoNewline
+	$versions = bf luis:version:list --appId $appId --endpoint $endpoint --subscriptionKey $subscriptionKey | ConvertFrom-Json
     Write-Host "Done." -ForegroundColor Green
 
     if ($versions | Where { $_.version -eq $version })
     {
         if ($versions | Where { $_.version -eq "backup" })
         {
-            Write-Host "> Deleting old backup version ..." -NoNewline
-            luis delete version `
-                --appId $appId `
-                --versionId backup `
-                --region $region `
-                --authoringKey $authoringKey `
-                --cloud $cloud `
-                --force `
-                --wait 2>> $log | Out-Null
+            Write-Host "> Running 'bf luis:version:delete -versionId backup' ..." -NoNewline
+            bf luis:version:delete --versionId "backup" --appId $appId --endpoint $endpoint --subscriptionKey $subscriptionKey
             Write-Host "Done." -ForegroundColor Green
         }
         
-        Write-Host "> Saving current version as backup ..." -NoNewline
-	    luis rename version `
+        Write-Host "> Running 'bf luis:version:rename --versionId $($version) --newVersionId backup' ..." -NoNewline
+        bf luis:version:rename --versionId $version --newVersionId "backup" --appId $appId --endpoint $endpoint --subscriptionKey $subscriptionKey
+        Write-Host "Done." -ForegroundColor Green
+    }
+
+    Write-Host "> Running 'bf luis:version:import --in $($outFile) --versionId $($version)' ..." -NoNewline
+    bf luis:version:import --in $outFile --versionId $version --appId $appId --endpoint $endpoint --subscriptionKey $subscriptionKey
+
+    Write-Host "> Running 'bf luis:application:publish' ..." -NoNewline
+            $(luis train version `
             --appId $appId `
-            --versionId $version `
-            --region $region `
-            --newVersionId backup `
-            --authoringKey $authoringKey `
+            --region westus `
+            --authoringKey $subscriptionKey `
+            --versionId 0.1 `
+            --wait
+        & bf luis:application:publish `
+            --appId $appId `
+            --endpoint $endpoint `
             --subscriptionKey $subscriptionKey `
-            --cloud $cloud `
-            --wait 2>> $log | Out-Null
-        Write-Host "Done." -ForegroundColor Green
-    }
-
-    Write-Host "> Importing new version ..." -NoNewline
-    ($output = luis import version `
-        --appId $appId `
-        --authoringKey $authoringKey `
-        --subscriptionKey $subscriptionKey `
-        --versionId $version `
-        --region $region `
-        --cloud $cloud `
-        --in $outFile `
-        --wait 2>&1) >> $log
-
-    if ($output) {
-        Write-Host "Error." -ForegroundColor Red
-
-        Write-Host "> Looking for backup versions ..." -NoNewline
-        $versions = (luis list versions `
-            --appId $appId `
-            --region $region `
-            --authoringKey $authoringKey `
-            --cloud $cloud) 2>> $log | ConvertFrom-Json
-        
-        if ($versions | Where { $_.version -eq 'backup' })
-        {
-            Write-Host "Done." -ForegroundColor Green
-
-            Write-Host "> Setting backup version as active ..." -NoNewline
-            luis set $appId `
-                --versionId 'backup' `
-                --authoringKey $authoringKey `
-                --subscriptionKey $subscriptionKey `
-                --region $region `
-                --cloud $cloud `
-                --force 2>> $log | Out-Null
-            Write-Host "Done."
-        }
-        else {
-            Write-Host "! No backup version found. Please review your LUIS application in the LUIS portal to resolve any issues." -ForegroundColor Red
-            Break
-        }
-    }
-    else {
-        Write-Host "Done." -ForegroundColor Green
-    }
-
-    Write-Host "> Training and publishing LUIS app ..." -NoNewline
-	$(luis train version `
-        --appId $luisApp.id `
-        --region $region `
-        --authoringKey $authoringKey `
-        --versionId $luisApp.activeVersion `
-        --cloud $cloud `
-        --wait
-    & luis publish version `
-        --appId $luisApp.id `
-        --region $region `
-        --authoringKey $authoringKey `
-        --versionId $luisApp.activeVersion `
-        --cloud $cloud `
-        --wait) 2>> $log | Out-Null
+            --versionId 0.1) 2>> $log | Out-Null
     Write-Host "Done." -ForegroundColor Green
 }
 
-function RunLuisGen($lu_file, $outName, $outFolder, $log)
+function RunLuisGen($luFile, $outName, $outFolder, $log)
 {
-    $id = $lu_file.BaseName
-	$luisFolder = $lu_file.DirectoryName
+    $id = $luFile.BaseName
+	$luisFolder = $luFile.DirectoryName
 	$luisFile = Join-Path $luisFolder "$($id).json"
 
 	bf luis:generate:cs `
